@@ -1,0 +1,8 @@
+203.251.151.75 
+203.251.151.76 
+
+traxon01/tr@xon1234
+ 
+alias bin='cd /JBOSS/jboss-fsw/bin'
+alias s1='cd /JBOSS/jboss-fsw/jboss-eap-6.1'
+alias log='cd /JBOSS/jboss-fsw/jboss-eap-6.1/standalone/log'
