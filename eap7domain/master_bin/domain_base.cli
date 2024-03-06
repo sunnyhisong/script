@@ -1,0 +1,114 @@
+#### JBoss EAP 7.4 Domain mode Base Cli ####
+
+
+#
+#socket change require:   :%s/ha-sockets/default-sockets/g
+#profile change:  :%s/\profile=ha/profile=default/g
+#SLAVE_NAME:	  :%s/SLAVE_NAME/slave11/g
+#GROUP_NAME:	  :%s/GROUP_NAME/cluster/g
+#NODE_NAME:	  :$s/NODE_NAME/cluster01/g
+
+### accesslog setting ###
+/profile=ha/subsystem=undertow/server=default-server/host=default-host/setting=access-log:add(pattern="%a %t %H %p %U %s %S %D")
+#/profile=ha/subsystem=undertow/server=default-server/host=default-host/setting=access-log:add(pattern="%h %l %u %t \"%r\" %s %b \"%{i,Referer}\" \"%{i,User-Agent}\" Cookie: \"%{i,COOKIE}\" Set-Cookie: \"%{o,SET-COOKIE}\" SessionID: %S Thread: \"%I\" TimeTaken: %T")
+/profile=ha/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=relative-to,value="custom.server.log.dir"
+/profile=ha/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=directory,value="access_log")
+/profile=ha/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=prefix,value="jboss_access.")
+/profile=ha/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=suffix,value=log)
+/profile=ha/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=record-request-start-time,value=true)
+
+
+
+### x-powered-by info setting ###
+/profile=ha/subsystem=undertow/servlet-container=default/setting=jsp:write-attribute(name=x-powered-by,value=false)
+
+### welcome conetent remove ###
+/profile=ha/subsystem=undertow/server=default-server/host=default-host/location=\/:remove
+/profile=ha/subsystem=undertow/configuration=handler/file=welcome-content:remove
+
+## max task thread setting ##
+/profile=ha/subsystem=io/worker=default:write-attribute(name=task-max-threads,value=200)
+
+### ajp,http listener add & setting ###
+/profile=ha/subsystem=undertow/server=default-server/ajp-listener=ajp:write-attribute(name=no-request-timeout,value=6000)
+/profile=ha/subsystem=undertow/server=default-server/ajp-listener=ajp:write-attribute(name=record-request-start-time,value=true)
+/profile=ha/subsystem=undertow/server=default-server/ajp-listener=ajp:write-attribute(name=max-connections,value=1024)
+#//profile=ha/subsystem=undertow/server=default-server/ajp-listener=ajp:add(socket-binding=ajp,record-request-start-time=true,no-request-timeout=6000)
+
+/profile=ha/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=no-request-timeout,value=6000)
+/profile=ha/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=record-request-start-time,value=true)
+/profile=ha/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=max-connections,value=1024)
+
+## LOG setting (CONSOLE remove)
+/profile=ha/subsystem=logging/root-logger=ROOT:write-attribute(name=handlers,value=["FILE"])
+/profile=ha/subsystem=logging:write-attribute(name=use-deployment-logging-config,value=false)
+
+## mod cluster remove
+/profile=ha/subsystem=modcluster:remove
+
+/host=SLAVE_NAME/interface=unsecure:add(inet-address="${jboss.bind.address:127.0.0.1}")
+
+batch
+## TCPPING cluster 
+/profile=ha/subsystem=jgroups/stack=tcpping:add(transport={socket-binding=jgroups-tcp,type=TCP})
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=org.jgroups.protocols.TCPPING:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=org.jgroups.protocols.TCPPING/property=initial_hosts:add(value="${jboss.cluster.tcp.initial_hosts}")
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=MERGE3:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=FD_SOCK:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=FD_ALL:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=VERIFY_SUSPECT:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=pbcast.NAKACK2:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=UNICAST3:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=pbcast.STABLE:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=pbcast.GMS:add(properties={join_timeout=3000})
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=MFC:add
+/profile=ha/subsystem=jgroups/stack=tcpping/protocol=FRAG3:add
+/profile=ha/subsystem=jgroups/channel=ee:write-attribute(name=stack,value=tcpping)
+
+
+run-batch
+
+
+#### server group create
+/server-group=GROUP_NAME:add(profile=ha,socket-binding-group=ha-sockets)
+/server-group=GROUP_NAME/jvm=defaultJVM:add(heap-size=1024m,max-heap-size=1024m,permgen-size=256m,max-permgen-size=256m)
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-server")
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+HeapDumpOnOutOfMemoryError")
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+ExplicitGCInvokesConcurrent")
+
+##java 1.8##
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+UseParallelOldGC")
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+PrintGCTimeStamps")
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+PrintGCDetails")
+/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+PrintHeapAtGC")
+##java 11##
+#/server-group=GROUP_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:+UseG1GC -XX:MaxGCPauseMillis=1000 ")
+
+
+
+## server group cluster create
+/server-group=GROUP_NAME/system-property="jboss.cluster.tcp.initial_hosts":add(value="10.65.40.70[7700],10.65.40.71[7700]")
+
+
+## server node create
+/host=SLAVE_NAME/server-config=:add(group=GROUP_NAME,auto-start=true
+
+/host=SLAVE_NAME/server-config=:write-attribute(name=socket-binding-group,value=ha-sockets)
+/host=SLAVE_NAME/server-config=NODE_NAME:write-attribute(name=socket-binding-port-offset,value=100)
+
+
+## deafult jvm options
+/host=SLAVE_NAME/server-config=NODE_NAME/jvm=defaultJMV:add
+/host=SLAVE_NAME/server-config=NODE_NAME/jvm=defaultJMV:add
+
+
+#### GC and OutOfMemmory
+/host=SLAVE_NAME/server-config=NODE_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-XX:HeapDumpPath=${jboss.server.log.dir}/servers/NODE_NAME/java_pid.hprof")
+#java 1.8 GC
+/host=SLAVE_NAME/server-config=NODE_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-Xloggc:${jboss.server.log.dir}/servers/NODE_NAME/gclog/gc_${DATE}.log"
+#java 11 GC
+#/host=SLAVE_NAME/server-config=NODE_NAME/jvm=defaultJVM:add-jvm-option(jvm-option="-Xlog:gc*,gc+heap=trace:${jboss.server.log.dir}/servers/NODE_NAME/gclog/gc_$DATE.log:time""
+
+## access log
+/host=SLAVE_NAME/server-config=NODE_NAME/path=custom.server.log.dir:add(path="${jboss.server.log.dir}/NODE_NAME"
+

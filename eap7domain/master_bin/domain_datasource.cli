@@ -1,0 +1,137 @@
+#########################################
+#   JBOSS EAP 7.x  DATASOURCE SETTING   #
+#########################################
+
+emove ExampleDS in datasources subsytem
+/profile=ha/subsystem=datasources/data-source=ExampleDS:remove
+/profile=ha/subsystem=datasources/jdbc-driver=h2:remove
+
+# Undefine ExampleDS from default datasource in ee subsystem
+/profile=ha/subsystem=ee/service=default-bindings:undefine-attribute(name=datasource)
+
+
+### MySQL
+/profile=ha/subsystem=datasources/jdbc-driver=mysql:add(driver-name=mysql,driver-module-name="mysql",driver-class-name="com.mysql.jdbc.Driver")
+#/profile=ha/subsystem=datasources/jdbc-driver=mysql:add(driver-name=mysql,driver-module-name="mysql",driver-class-name="com.mysql.cj.jdbc.Driver")
+/profile=ha/subsystem=datasources/data-source=mysql:add(enabled=true,connection-url=jdbc:mysql://192.168.56.101:3306/Test,jndi-name=java:/mysql,driver-name=mysql)
+#/profile=ha/subsystem=datasources/data-source=mysql:add(enabled=true,connection-url="jdbc:mysql://10.65.40.78:3306/was?serverTimezone=UTC",jndi-name=java:/mysql,driver-name=mysql)
+/profile=ha/subsystem=datasources/data-source=mysql/connection-properties=connectTimeout:add(value=10000)
+/profile=ha/subsystem=datasources/data-source=mysql/connection-properties=socketTimeout:add(value=60000)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=min-pool-size,value=20)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=max-pool-size,value=50)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=pool-prefill,value=false)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=pool-use-strict-min,value=true)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=user-name,value=Test_user)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=password,value=Test_user)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=background-validation,value=true)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=background-validation-millis,value=5000)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=valid-connection-checker-class-name,value="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker")
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=exception-sorter-class-name,value="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter")
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=query-timeout,value=30)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=idle-timeout-minutes,value=15)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=prepared-statements-cache-size,value=20)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=share-prepared-statements,value=true)
+/profile=ha/subsystem=datasources/data-source=mysql:write-attribute(name=statistics-enabled, value=true)
+
+
+### PPAS
+#/profile=ha/subsystem=datasources/jdbc-driver=ppas93:add(driver-name=ppas93,driver-module-name="com.ppas93",driver-class-name="com.edb.Driver")
+#/profile=ha/subsystem=datasources/data-source=ppasds:add(enabled=true,connection-url="jdbc:edb://127.0.0.1:5450/edb",jndi-name=java:/jboss/ppasds,driver-name=ppas93)
+#/profile=ha/subsystem=datasources/data-source=ppasds/connection-properties=loginTimeout:add(value=10000)
+#/profile=ha/subsystem=datasources/data-source=ppasds/connection-properties=socketTimeout:add(value=60000)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=max-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=min-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=pool-prefill,value=false)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=pool-use-strict-min,value=true)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=user-name,value=enterprisedb)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=password,value=edb)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=background-validation,value=true)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=background-validation-millis,value=5000)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=valid-connection-checker-class-name,value="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker")
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=exception-sorter-class-name,value="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter")
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=idle-timeout-minutes,value=15)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=prepared-statements-cache-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=share-prepared-statements,value=true)
+#/profile=ha/subsystem=datasources/data-source=ppasds:write-attribute(name=statistics-enabled, value=true)
+
+## Oracle
+#/profile=ha/subsystem=datasources/jdbc-driver=oracle11:add(driver-module-name=com.oracle11,driver-name=com.oracle,driver-xa-datasource-class-name="oracle.jdbc.xa.client.OracleXADataSource")
+/profile=ha/subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
+/profile=ha/subsystem=datasources/data-source=oracle:add(enabled=true,connection-url="jdbc:oracle:thin:@10.65.40.77:1521:XE",jndi-name=java:/oracle,driver-name=oracle)
+/profile=ha/subsystem=datasources/data-source=oracle/connection-properties=oracle.net.CONNECT_TIMEOUT:add(value=10000)
+/profile=ha/subsystem=datasources/data-source=oracle/connection-properties=oracle.jdbc.ReadTimeout:add(value=60000)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=max-pool-size,value=20)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=min-pool-size,value=20)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=pool-prefill,value=false)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=pool-use-strict-min,value=true)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=user-name,value=Test_user)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=password,value=Test_user)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=background-validation,value=true)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=background-validation-millis,value=5000)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=valid-connection-checker-class-name,value="org.jboss.jca.adapters.jd
+bc.extensions.oracle.OracleValidConnectionChecker")
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=stale-connection-checker-class-name,value="org.jboss.jca.adapters.jd
+bc.extensions.oracle.OracleStaleConnectionChecker")
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=exception-sorter-class-name,value="org.jboss.jca.adapters.jdbc.exten
+sions.oracle.OracleExceptionSorter")
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=query-timeout,value=30)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=idle-timeout-minutes,value=15)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=prepared-statements-cache-size,value=20)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=share-prepared-statements,value=true)
+/profile=ha/subsystem=datasources/data-source=oracle:write-attribute(name=statistics-enabled, value=true)
+
+## Cubrid
+
+#/profile=ha/subsystem=datasources/jdbc-driver=cubrid:add(driver-name=cubrid,driver-class-name="cubrid.jdbc.driver.CUBRIDDriver",driver-module-name="cubrid")
+#/profile=ha/subsystem=datasources/data-source=cubrid:add(enabled=true,connection-url="jdbc:cubrid:127.0.0.1:33000:subway:::",jndi-name="java:/cubrid",driver-name="cubrid")
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=max-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=min-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=pool-prefill,value=false)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=pool-use-strict-min,value=true)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=user-name,value=root)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=password,value=rplinux)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=query-timeout,value=30)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=idle-timeout-minutes,value=15)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=validate-on-match,value=true)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=check-valid-connection-sql,value=select 1)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=prepared-statements-cache-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=share-prepared-statements,value=true)
+#/profile=ha/subsystem=datasources/data-source=cubrid:write-attribute(name=statistics-enabled, value=true)
+
+## altibase
+#/profile=ha/subsystem=datasources/jdbc-driver=altiabse:add(driver-name=altiabse,driver-class-name="Altibase.jdbc.driver.AltibaseDriver",driver-module-name="Altibase")
+#/profile=ha/subsystem=datasources/data-source=altiabse:add(enabled=true,connection-url="jdbc:Altibase://192.168.200.134:20300/mydb;response_timeout=1",jndi-name="java:/altiabse",driver-name="altiabse")
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=max-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=min-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=pool-prefill,value=false)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=pool-use-strict-min,value=true)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=user-name,value=root)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=password,value=rplinux)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=query-timeout,value=30)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=idle-timeout-minutes,value=15)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=validate-on-match,value=true)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=check-valid-connection-sql,value=select 1)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=prepared-statements-cache-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=share-prepared-statements,value=true)
+#/profile=ha/subsystem=datasources/data-source=altiabse:write-attribute(name=statistics-enabled, value=true)
+
+### Mariadb
+#/profile=ha/subsystem=datasources/jdbc-driver=mariadb:add(driver-name=mariadb,driver-module-name="org.mariadb",driver-class-name="org.mariadb.jdbc.Driver")
+#/profile=ha/subsystem=datasources/data-source=mariadb:add(enabled=true,connection-url=jdbc:mariadb://10.65.40.52:3306/mysql,jndi-name=java:/mariadb,driver-name=mariadb)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=max-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=min-pool-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=pool-prefill,value=true)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=user-name,value=root)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=password,value=rplinux)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=background-validation,value=true)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=background-validation-millis,value=5000)
+##/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=check-valid-connection-sql,value="select 1")
+##/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=new-connection-sql, value="select 2")
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=valid-connection-checker-class-name,value="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker")
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=exception-sorter-class-name,value="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter")
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=blocking-timeout-wait-millis,value=30000)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=query-timeout,value=30)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=idle-timeout-minutes,value=15)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=prepared-statements-cache-size,value=20)
+#/profile=ha/subsystem=datasources/data-source=mariadb:write-attribute(name=share-prepared-statements,value=true)
+

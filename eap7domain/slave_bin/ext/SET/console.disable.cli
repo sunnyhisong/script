@@ -1,0 +1,18 @@
+#!/bin/sh
+. ../env.sh
+
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+batch
+/profile=ha-about/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-ad/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-campaign/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-cfadm/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-support/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-vandi/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-www/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-tmp2/subsystem=logging/console-handler=CONSOLE:disable
+/profile=ha-tmp3/subsystem=logging/console-handler=CONSOLE:disable
+run-batch
+exit
+EOF
+

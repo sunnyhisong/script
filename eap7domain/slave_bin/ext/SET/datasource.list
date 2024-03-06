@@ -1,0 +1,5 @@
+#profile,datasource_name,connection-url,user-name,password
+ha,jpetstore,"jdbc:mysql://172.16.167.2:3306/jpetstore?connectTimeout=10000&amp;socketTimeout=10000",jpetstore,jpetstore
+default,jpetstore,"jdbc:mysql://172.16.167.2:3306/jpetstore?connectTimeout=10000&amp;socketTimeout=10000",jpetstore,jpetstore
+full,jpetstore,"jdbc:mysql://172.16.167.2:3306/jpetstore?connectTimeout=10000&amp;socketTimeout=10000",jpetstore,jpetstore
+full-ha,jpetstore,"jdbc:mysql://172.16.167.2:3306/jpetstore?connectTimeout=10000&amp;socketTimeout=10000",jpetstore,jpetstore

@@ -1,0 +1,219 @@
+  
+################################## 
+# JBOSS EAP 6.4 DOMAIN MODE      # 
+#--------------------------------# 
+# Server config : ha             # 
+# Config File   : domain.xml     # 
+################################# 
+  
+  
+batch 
+##################################### 
+## SERVER GROUP && SERVERS SETTING ## 
+##################################### 
+
+## default Server stop 
+/host=master/server-config=stop-servers 
+/host=slave/server-config=stop-servers 
+# 
+## cluster group add 
+/server-group=cluster:add(profile=ha,socket-binding-port-offset=0,socket-binding-group=ha-sockets) 
+   
+## Server Group Clustering 
+# udp 
+/server-group=cluster/system-property=jboss.default.multicast.address:add(value="230.10.10.1") 
+/server-group=cluster/system-property=jboss.default.multicast.address:add(value="230.10.10.2") 
+/server-group=cluster/system-property=jboss.messaging.group.address:add(value="230.10.20.1") 
+    
+# tcp 
+#/server-group=cluster/system-property=jgroups.tcpping.initial_hosts:add(value="192.168.56.101[8600],192.168.56.101[8700]") 
+      
+## default Server remove 
+ /host=slave/server-config=server-one:remove 
+ /host=slave/server-config=server-two:remove 
+    
+## default Group remove 
+ /server-group=main-server-group:remove 
+ /server-group=other-server-group:remove 
+## server add 
+/host=master/server-config=cluster11:add(auto-start=true,group=cluster,socket-binding-group=ha-sockets,socket-binding-port-offset=100) 
+/host=master/server-config=cluster12:add(auto-start=true,group=cluster,socket-binding-group=ha-sockets,socket-binding-port-offset=200) 
+/host=slave/server-config=cluster21:add(auto-start=true,group=cluster,socket-binding-group=ha-sockets,socket-binding-port-offset=100) 
+/host=slave/server-config=cluster22:add(auto-start=true,group=cluster,socket-binding-group=ha-sockets,socket-binding-port-offset=200) 
+    
+# 
+## Servers GC setting ######### 
+#/host=master/server-config=server11/jvm=server11_jvm:add(heap-size=256m,max-heap-size=1024m,permgen-size=128m,max-permgen-size=256m) 
+#/host=master/server-config=server11/jvm=server11_jvm:write-attribute(name=jvm-options, value=["-server","-XX:+UseParallelOldGC","-XX:+PrintGCTimeStamps","-XX:+PrintGCDetails","-Xloggc:${jboss.server.log.dir}/servers/server11/log/gclog/gc_${DATE}.log","-XX:+ExplicitGCInvokesConcurrent","-XX:+HeapDumpOnOutOfMemoryError","-XX:HeapDumpPath=${jboss.domain.base.dir}/servers/server11/log/java_pid.hprof"]) 
+    
+#/host=master/server-config=server21/jvm=server21_jvm:add(heap-size=256m,max-heap-size=1024m,permgen-size=128m,max-permgen-size=256m) 
+#/host=master/server-config=server21/jvm=server21_jvm:write-attribute(name=jvm-options, value=["-server","-XX:+UseParallelOldGC","-XX:+PrintGCTimeStamps","-XX:+PrintGCDetails","-Xloggc:${jboss.server.log.dir}/servers/server21/log/gclog/gc_${DATE}.log","-XX:+ExplicitGCInvokesConcurrent","-XX:+HeapDumpOnOutOfMemoryError","-XX:HeapDumpPath=${jboss.domain.base.dir}/servers/server21/log/java_pid.hprof"]) 
+  
+## cluster11 
+/host=master/server-config=cluster11/jvm=cluster_jvm:add(heap-size=256m,max-heap-size=512m,permgen-size=256m,max-permgen-size=512m) 
+/host=master/server-config=cluster11/jvm=cluster_jvm:write-attribute(name=jvm-options,value=["-server","-XX:+UseParallelOldGC","-XX:+UseAdaptiveSizePolicy","-XX:+PrintGCTimeStamps","-XX:+PrintGCDetails","-Xloggc:${server.group.node1.gclog}/gc_${jboss.date}.log","-XX:+ExplicitGCInvokesConcurrent","-XX:+HeapDumpOnOutOfMemoryError","-XX:HeapDumpPath=${server.group.node1.gclog}/java_pid.hprof"]) 
+## cluster12 
+/host=master/server-config=cluster12/jvm=cluster_jvm:add(heap-size=256m,max-heap-size=512m,permgen-size=256m,max-permgen-size=512m) 
+/host=master/server-config=cluster12/jvm=cluster_jvm:write-attribute(name=jvm-options,value=["-server","-XX:+UseParallelOldGC","-XX:+UseAdaptiveSizePolicy","-XX:+PrintGCTimeStamps","-XX:+PrintGCDetails","-Xloggc:${server.group.node2.gclog}/gc_${jboss.date}.log","-XX:+ExplicitGCInvokesConcurrent","-XX:+HeapDumpOnOutOfMemoryError","-XX:HeapDumpPath=${server.group.node2.gclog}/java_pid.hprof"]) 
+  
+## cluster21 
+/host=slave/server-config=cluster21/jvm=cluster_jvm:add(heap-size=256m,max-heap-size=512m,permgen-size=256m,max-permgen-size=512m)  
+/host=slave/server-config=cluster21/jvm=cluster_jvm:write-attribute(name=jvm-options,value=["-server","-XX:+UseParallelOldGC","-XX:+UseAdaptiveSizePolicy","-XX:+PrintGCTimeStamps","-XX:+PrintGCDetails","-Xloggc:${server.group.node1.gclog}/gc_${jboss.date}.log","-XX:+ExplicitGCInvokesConcurrent","-XX:+HeapDumpOnOutOfMemoryError","-XX:HeapDumpPath=${server.group.node1.gclog}/java_pid.hprof"]) 
+## cluster22 
+/host=slave/server-config=cluster22/jvm=cluster_jvm:add(heap-size=256m,max-heap-size=512m,permgen-size=256m,max-permgen-size=512m) 
+/host=slave/server-config=cluster22/jvm=cluster_jvm:write-attribute(name=jvm-options,value=["-server","-XX:+UseParallelOldGC","-XX:+UseAdaptiveSizePolicy","-XX:+PrintGCTimeStamps","-XX:+PrintGCDetails","-Xloggc:${server.group.node2.gclog}/gc_${jboss.date}.log","-XX:+ExplicitGCInvokesConcurrent","-XX:+HeapDumpOnOutOfMemoryError","-XX:HeapDumpPath=${server.group.node2.gclog}/java_pid.hprof"]) 
+  
+    
+## jvmRoute setting 
+/host=master/server-config=cluster11/system-property=jvmRoute:add(value=cluster11) 
+/host=master/server-config=cluster12/system-property=jvmRoute:add(value=cluster12) 
+/host=slave/server-config=cluster21/system-property=jvmRoute:add(value=cluster21) 
+/host=slave/server-config=cluster22/system-property=jvmRoute:add(value=cluster22) 
+    
+# 
+### UseJK setting 
+/host=master/server-config=cluster11/system-property=UseJK:add(value=true) 
+/host=master/server-config=cluster12/system-property=UseJK:add(value=true) 
+/host=slave/server-config=cluster21/system-property=UseJK:add(value=true) 
+/host=slave/server-config=cluster22/system-property=UseJK:add(value=true) 
+    
+# 
+### Infinispan Node Name 
+/host=master/server-config=cluster11/system-property=jboss.node.name:add(value=cluster11) 
+/host=master/server-config=cluster12/system-property=jboss.node.name:add(value=cluster12) 
+/host=slave/server-config=cluster21/system-property=jboss.node.name:add(value=cluster21) 
+/host=slave/server-config=cluster22/system-property=jboss.node.name:add(value=cluster22) 
+  
+  
+########################### 
+## DOMAIN CONFIG SETTING ## 
+########################### 
+## threads settings 
+/profile=ha/subsystem=threads/thread-factory=ajp-thread:add(priority=1) 
+/profile=ha/subsystem=threads/unbounded-queue-thread-pool=ajp-thread-pool:add(max-threads=250,keepalive-time={time=60,unit="seconds"},thread-factory=ajp-thread) 
+# 
+## http connector settings 
+/profile=ha/subsystem=web/connector=http:write-attribute(name=max-connections,value=32) 
+## ajp connector settings 
+/profile=ha/subsystem=web/connector=ajp:write-attribute(name=max-connections,value=2048,name=executor,value=ajp-thread-pool) 
+    
+# 
+## Native thread settings 
+/profile=ha/subsystem=web:write-attribute(name=native,value=true) 
+# 
+### JSP Compile Setting 
+/profile=ha/subsystem=web/configuration=jsp-configuration:write-attribute(name=development,value=true) 
+# 
+## welcome root settings 
+/profile=ha/subsystem=web/virtual-server=default-host:write-attribute(name=enable-welcome-root,value=false) 
+    
+## DataSource Setting 
+## ExampleDS remove 
+/profile=ha/subsystem=datasources/data-source=ExampleDS:remove 
+/profile=ha/subsystem=datasources/jdbc-driver=h2:remove 
+    
+### MySQL 
+/profile=ha/subsystem=datasources/jdbc-driver=mysql5:add(driver-name=mysql5,driver-module-name="com.mysql",driver-class-name="com.mysql.jdbc.Driver") 
+/profile=ha/subsystem=datasources/data-source=MySQL5:add(enabled=true,connection-url=jdbc:mysql://172.16.168.2:3306/mysql,jndi-name=java:/MySQL5,driver-name=mysql5) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=max-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=min-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=pool-prefill,value=true) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=user-name,value=root) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=password,value=rplinux) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=background-validation,value=true) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=background-validation-millis,value=5000) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=check-valid-connection-sql,value="select 1") 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=new-connection-sql, value="select 2") 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=valid-connection-checker-class-name,value="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker") 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=exception-sorter-class-name,value="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter") 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=blocking-timeout-wait-millis,value=30000) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=query-timeout,value=30) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=idle-timeout-minutes,value=15) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=prepared-statements-cache-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=MySQL5:write-attribute(name=share-prepared-statements,value=true) 
+    
+## Oracle 
+/profile=ha/subsystem=datasources/jdbc-driver=oracle6:add(driver-name=oracle6,driver-module-name="com.oracle",xa-datasource-class="oracle.jdbc.xa.client.OracleXADataSource") 
+/profile=ha/subsystem=datasources/data-source=ORACLE:add(enabled=true,connection-url="jdbc:oracle:thin:@172.16.150.70:1521:DBNAME",jndi-name=java:/ORACLE,driver-name=oracle6) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=max-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=min-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=pool-prefill,value=true) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=user-name,value=root) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=password,value=rplinux) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=background-validation,value=true) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=background-validation-millis,value=5000) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=check-valid-connection-sql,value="select 1 from dual") 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=new-connection-sql, value="select 2 from dual") 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=valid-connection-checker-class-name,value="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker") 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=stale-connection-checker-class-name,value="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleStaleConnectionChecker") 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=exception-sorter-class-name,value="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter") 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=blocking-timeout-wait-millis,value=30000) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=query-timeout,value=30) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=idle-timeout-minutes,value=15) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=prepared-statements-cache-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=ORACLE:write-attribute(name=share-prepared-statements,value=true) 
+    
+## Cubrid 
+/profile=ha/subsystem=datasources/jdbc-driver=cubrid:add(driver-name=cubrid,driver-class-name="cubrid.jdbc.driver.CUBRIDDriver",driver-module-name="cubrid") 
+/profile=ha/subsystem=datasources/data-source=CUBRID:add(enabled=true,connection-url="jdbc:cubrid:192.168.56.100:33000:subway:::",jndi-name="java:/Cubrid",driver-name="cubrid") 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=max-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=min-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=pool-prefill,value=true) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=user-name,value=root) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=password,value=rplinux) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=blocking-timeout-wait-millis,value=30000) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=query-timeout,value=30) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=idle-timeout-minutes,value=15) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=validate-on-match,value=true) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=check-valid-connection-sql,value=select 1) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=new-connection-sql, value="select 2") 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=prepared-statements-cache-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=CUBRID:write-attribute(name=share-prepared-statements,value=true) 
+    
+# 
+### Tibero 
+/profile=ha/subsystem=datasources/jdbc-driver=tibero:add(driver-name=tibero,driver-module-name="com.tibero",driver-class-name="com.tmax.tibero.jdbc.TbDriver") 
+/profile=ha/subsystem=datasources/data-source=tiberods:add(enabled=true,connection-url=jdbc:mysql://172.16.168.2:3306/mysql,jndi-name=java:/tiberods,driver-name=tibero) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=driver-class, value="com.tmax.tibero.jdbc.TbDriver")  #이거 없으면 Can't open session SQLException 발생 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=max-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=min-pool-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=pool-prefill,value=true) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=user-name,value=root) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=password,value=rplinux) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=background-validation,value=true) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=background-validation-millis,value=5000) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=query-timeout,value=30) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=idle-timeout-minutes,value=15) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=prepared-statements-cache-size,value=20) 
+/profile=ha/subsystem=datasources/data-source=tiberods:write-attribute(name=share-prepared-statements,value=true) 
+    
+    
+## LOG setting (CONSOLE remove) 
+/profile=ha/subsystem=logging/root-logger=ROOT:write-attribute(name=handlers,value=["FILE"]) 
+    
+## Access Log 
+/profile=ha/subsystem=web/virtual-server=default-host/access-log=configuration:add(pattern=%a %t %H %p %U %s %S %T) 
+/profile=ha/subsystem=web/virtual-server=default-host/access-log=configuration/directory=configuration:add(path=".") 
+/profile=ha/subsystem=web/virtual-server=default-host/access-log=configuration:write-attribute(name=prefix,value="jboss_access_log.") 
+    
+## deployment setting 
+/deployment=WEBAPP:add(runtime-name="/sw/jboss/WEBAPP/simple6.war",content=[{archive="true",path="/sw/jboss/WEBAPP/simple6.war"}]) 
+    
+## deploy 
+#deploy --name=WEBAPP --server-groups=cluster 
+   
+## unmanaged Deploy 
+deploy /sw/app/simple.war/ --server-groups=server-group-1 --unmanaged 
+deploy /sw/app/simple2.war/ --server-groups=server-group-2 --unmanaged 
+  
+## Jgoups setting 
+## TCPPING 등록 
+/profile=ha/subsystem=jgroups/stack=tcp/protocol=MPING:write-attribute(name=type,value=TCPPING) 
+/profile=ha/subsystem=jgroups/stack=tcp/protocol=MPING/property=initial_hosts:add(value="${jgroups.tcpping.initial_hosts:localhost:[7600],localhost:[7700]}") 
+/profile=ha/subsystem=jgroups/stack=tcp/protocol=MPING/property=timeout:add(value=3000) 
+/profile=ha/subsystem=jgroups/stack=tcp/protocol=MPING/property=num_initial_members:add(value=2) 
+   
+# default stack 
+/profile=ha/subsystem=jgroups:write-attribute(name=default-stack,value="${jboss.default.jgroups.stack:udp}") 
+       
+run-batch

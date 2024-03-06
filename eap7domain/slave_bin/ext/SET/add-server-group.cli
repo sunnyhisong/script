@@ -1,0 +1,98 @@
+#!/bin/sh
+. ../env.sh
+unset JAVA_OPTS
+export JAVA_OPTS=" -Djava.awt.headless=false "
+
+#SERVER_GROUP=ishome2
+#MULTICAST_ADDR=231.1.2.1
+#JMS_MULTICAST_ADDR=232.1.2.1
+
+add(){
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+if (outcome != success) of /server-group=$SERVER_GROUP:read-resource
+  /server-group=$SERVER_GROUP:add(profile=ha,socket-binding-group=ha-sockets)
+  /server-group=$SERVER_GROUP/jvm=default:add(heap-size=512m,max-heap-size=512m,permgen-size=128m,max-permgen-size=128m,stack-size=256k)
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-server") 
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:+PrintGCTimeStamps")
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:+PrintGCDetails")
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:+UseParallelGC")
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:+UseParallelOldGC")  
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:NumberOfGCLogFiles=10")
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:+UseGCLogFileRotation")
+  /server-group=$SERVER_GROUP/jvm=default:add-jvm-option(jvm-option="-XX:GCLogFileSize=3M")
+  /server-group=$SERVER_GROUP/system-property=jboss.default.multicast.address:add(value=$SERVER_MULTICAST_ADDR)
+  /server-group=$SERVER_GROUP/system-property=jboss.messaging.group.address:add(value=$SERVER_JMS_MULTICAST_ADDR)
+end-if
+exit
+EOF
+}
+
+remove(){
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+if (outcome == success) of /server-group=$SERVER_GROUP:read-resource
+  /server-group=$SERVER_GROUP:remove()
+end-if
+exit
+EOF
+}
+
+status(){
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+  /server-group=$SERVER_GROUP:read-resource(recursive=true)
+exit
+EOF
+}
+
+# See how we were called.
+case "$1" in
+  add)
+    for i in $(cat server-group.list)
+    do
+        if [[ $i =~ ^# ]]; then
+          continue
+        fi
+
+     SERVER_GROUP=`echo $i | awk -F ',' '{print $1}'`
+     SERVER_MULTICAST_ADDR=`echo $i | awk -F ',' '{print $2}'`
+     SERVER_JMS_MULTICAST_ADDR=`echo $i | awk -F ',' '{print $3}'`
+
+     echo $SERVER_GROUP $SERVER_MULTICAST_ADDR $SERVER_JMS_MULTICAST_ADDR
+     add
+    done
+    ;;
+  remove)
+    for i in $(cat server-group.list)
+    do
+        if [[ $i =~ ^# ]]; then
+          continue
+        fi
+
+     SERVER_GROUP=`echo $i | awk -F ',' '{print $1}'`
+     SERVER_MULTICAST_ADDR=`echo $i | awk -F ',' '{print $2}'`
+     SERVER_JMS_MULTICAST_ADDR=`echo $i | awk -F ',' '{print $3}'`
+
+     echo $SERVER_GROUP $SERVER_MULTICAST_ADDR $SERVER_JMS_MULTICAST_ADDR
+     remove
+    done
+    ;;
+  status)
+    for i in $(cat server-group.list)
+    do
+        if [[ $i =~ ^# ]]; then
+          continue
+        fi
+
+     SERVER_GROUP=`echo $i | awk -F ',' '{print $1}'`
+     SERVER_MULTICAST_ADDR=`echo $i | awk -F ',' '{print $2}'`
+     SERVER_JMS_MULTICAST_ADDR=`echo $i | awk -F ',' '{print $3}'`
+
+     status 
+    done
+    ;;
+  *)
+    echo $"Usage: $0 {add|remove|status}"
+    exit 2
+esac
+
+exit $?
+

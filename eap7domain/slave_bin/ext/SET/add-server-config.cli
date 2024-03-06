@@ -1,0 +1,104 @@
+#!/bin/sh
+. ../env.sh
+unset JAVA_OPTS
+export JAVA_OPTS=" -Djava.awt.headless=false "
+
+#SERVER_GROUP=ishome1
+#SERVER_CONFIG=ishome111
+#SERVER_HOST=`/bin/hostname`
+#SERVER_HOST=khan02
+#SERVER_OFFSET=100
+#SERVER_BIND_ADDR=192.168.101.151
+
+add(){
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+if (outcome != success) of /host=$SERVER_HOST/server-config=$SERVER_CONFIG:read-resource
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG:add(group=$SERVER_GROUP,socket-binding-group=ha-sockets,socket-binding-port-offset=$SERVER_OFFSET,auto-start=false)
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG/system-property=jboss.node.name:add(value=$SERVER_CONFIG) 
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG/system-property=jboss.bind.address:add(value=$SERVER_BIND_ADDR)
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG/jvm=default:add() 
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG/jvm=default:add-jvm-option(jvm-option="-Xloggc:${jboss.domain.base.dir}/servers/${jboss.instance2}/log/gclog/gc.log.${DATE}")
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG/jvm=default:add-jvm-option(jvm-option="-XX:HeapDumpPath=${jboss.domain.base.dir}/servers/${jboss.instance2}/log/gclog/java_pid.hprof")
+end-if
+exit
+EOF
+}
+
+remove(){
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+if (outcome == success) of /host=$SERVER_HOST/server-config=$SERVER_CONFIG:read-resource
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG:remove()
+end-if
+exit
+EOF
+}
+
+status(){
+$JBOSS_HOME/bin/jboss-cli.sh  --controller=$DOMAIN_MASTER_ADDR:$DOMAIN_MASTER_PORT --connect <<EOF
+  /host=$SERVER_HOST/server-config=$SERVER_CONFIG:read-resource(recursive=true)
+exit
+EOF
+}
+
+# See how we were called.
+case "$1" in
+  add)
+   #add 
+    for i in $(cat server-config.list)
+    do
+        if [[ $i =~ ^# ]]; then
+          continue
+        fi
+
+     SERVER_GROUP=`echo $i | awk -F ',' '{print $1}'`
+     SERVER_CONFIG=`echo $i | awk -F ',' '{print $2}'`
+     SERVER_HOST=`echo $i | awk -F ',' '{print $3}'`
+     SERVER_OFFSET=`echo $i | awk -F ',' '{print $4}'`
+     SERVER_BIND_ADDR=`echo $i | awk -F ',' '{print $5}'`
+    
+     echo $SERVER_GROUP $SERVER_CONFIG $SERVER_HOST $SERVER_OFFSET $SERVER_BIND_ADDR
+     add
+    done
+    ;;
+  remove)
+
+    for i in $(cat server-config.list)
+    do
+        if [[ $i =~ ^# ]]; then
+          continue
+        fi
+
+     SERVER_GROUP=`echo $i | awk -F ',' '{print $1}'`
+     SERVER_CONFIG=`echo $i | awk -F ',' '{print $2}'`
+     SERVER_HOST=`echo $i | awk -F ',' '{print $3}'`
+     SERVER_OFFSET=`echo $i | awk -F ',' '{print $4}'`
+     SERVER_BIND_ADDR=`echo $i | awk -F ',' '{print $5}'`
+
+     echo $SERVER_GROUP $SERVER_CONFIG $SERVER_HOST $SERVER_OFFSET $SERVER_BIND_ADDR
+     remove 
+    done
+    ;;
+  status)
+    for i in $(cat server-config.list)
+    do
+        if [[ $i =~ ^# ]]; then
+          continue
+        fi
+
+     SERVER_GROUP=`echo $i | awk -F ',' '{print $1}'`
+     SERVER_CONFIG=`echo $i | awk -F ',' '{print $2}'`
+     SERVER_HOST=`echo $i | awk -F ',' '{print $3}'`
+     SERVER_OFFSET=`echo $i | awk -F ',' '{print $4}'`
+     SERVER_BIND_ADDR=`echo $i | awk -F ',' '{print $5}'`
+
+     echo $SERVER_GROUP $SERVER_CONFIG $SERVER_HOST $SERVER_OFFSET $SERVER_BIND_ADDR
+     status 
+    done
+  ;;
+  *)
+    echo $"Usage: $0 {add|remove|status}"
+    exit 2
+esac
+
+exit $?
+
