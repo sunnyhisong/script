@@ -1,0 +1,66 @@
+batch
+### accesslog setting ###
+/subsystem=undertow/server=default-server/host=default-host/setting=access-log:add(pattern="%a %t %H %p %U %s %S %D")
+#/subsystem=undertow/server=default-server/host=default-host/setting=access-log:add(pattern="%h %l %u %t \"%r\" %s %b \"%{i,Referer}\" \"%{i,User-Agent}\" Cookie: \"%{i,COOKIE}\" Set-Cookie: \"%{o,SET-COOKIE}\" SessionID: %S Thread: \"%I\" TimeTaken: %T")
+/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=directory,value="${jboss.server.log.dir}/access_log")
+/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=prefix,value="jboss_access.")
+/subsystem=undertow/server=default-server/host=default-host/setting=access-log:write-attribute(name=suffix,value=log)
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=record-request-start-time,value=true)
+
+
+### x-powered-by info setting ###
+/subsystem=undertow/servlet-container=default/setting=jsp:write-attribute(name=x-powered-by,value=false)
+
+### welcome conetent remove ###
+/subsystem=undertow/server=default-server/host=default-host/location=\/:remove
+/subsystem=undertow/configuration=handler/file=welcome-content:remove
+
+## max task thread setting ##
+/subsystem=io/worker=default:write-attribute(name=task-max-threads,value=200)
+
+### ajp,http listener add & setting ###
+/subsystem=undertow/server=default-server/ajp-listener=ajp:write-attribute(name=no-request-timeout,value=6000)
+/subsystem=undertow/server=default-server/ajp-listener=ajp:write-attribute(name=record-request-start-time,value=true)
+/subsystem=undertow/server=default-server/ajp-listener=ajp:write-attribute(name=max-connections,value=1024)
+#/subsystem=undertow/server=default-server/ajp-listener=ajp:add(socket-binding=ajp,record-request-start-time=true,no-request-timeout=6000)
+
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=no-request-timeout,value=6000)
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=record-request-start-time,value=true)
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=max-connections,value=1024)
+
+## LOG setting (CONSOLE remove)
+/subsystem=logging/root-logger=ROOT:write-attribute(name=handlers,value=["FILE"])
+/subsystem=logging:write-attribute(name=use-deployment-logging-config,value=false)
+
+## mod cluster remove
+/subsystem=modcluster:remove
+
+## External deployment ( EXTERNAL DIRECTORY 확인)
+/subsystem=deployment-scanner/scanner=default:write-attribute(name=scan-enabled,value=false)
+#/subsystem=deployment-scanner/scanner=default:write-attribute(name=auto-deploy-exploded,value=true)
+##/subsystem=deployment-scanner/scanner=default:write-attribute(name=scan-interval,value=0)
+##/subsystem=deployment-scanner/scanner=WEBAPP:add(scan-enabled=false,path="changeMe",auto-deploy-exploded=true,scan-interval=0)
+
+
+## jgoups setting TCP cluster
+# 7.4
+/subsystem=jgroups/channel=ee:write-attribute(name=stack,value=tcp)
+#run-batch
+
+#batch
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=jgroups-host-a:add(host=${jgroups.host1.address},port=${jgroups.host1.port})
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=jgroups-host-b:add(host=${jgroups.host2.address},port=${jgroups.host2.port})
+/subsystem=jgroups/stack=tcpping:add(transport={socket-binding=jgroups-tcp,type=TCP})
+/subsystem=jgroups/stack=tcpping/protocol=TCPPING:add(socket-bindings=[jgroups-host-a,jgroups-host-b])
+/subsystem=jgroups/stack=tcpping/protocol=MERGE3:add
+/subsystem=jgroups/stack=tcpping/protocol=FD_SOCK:add
+/subsystem=jgroups/stack=tcpping/protocol=FD_ALL:add
+/subsystem=jgroups/stack=tcpping/protocol=VERIFY_SUSPECT:add
+/subsystem=jgroups/stack=tcpping/protocol=pbcast.NAKACK2:add
+/subsystem=jgroups/stack=tcpping/protocol=UNICAST3:add
+/subsystem=jgroups/stack=tcpping/protocol=pbcast.STABLE:add
+/subsystem=jgroups/stack=tcpping/protocol=pbcast.GMS:add(properties={join_timeout=3000})
+/subsystem=jgroups/stack=tcpping/protocol=MFC:add
+/subsystem=jgroups/stack=tcpping/protocol=FRAG3:add
+/subsystem=jgroups/channel=ee:write-attribute(name=stack,value=tcpping)
+run-batch
