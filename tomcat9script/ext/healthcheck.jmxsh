@@ -1,0 +1,81 @@
+#
+# Script for remotely invoking garbage collection on a set of servers.
+#
+
+set systemTime "[clock seconds]"
+set date "[clock format $systemTime -format %Y-%m-%d]" 
+set time "[clock format $systemTime -format %H:%M:%S]" 
+
+set hosts [list]
+lappend hosts {monitor:qwer1234@127.0.0.1:9999}
+#lappend hosts {monitor:qwer1234@192.168.56.101:9999}
+
+set dbs [list]
+#lappend dbs {jdbc/sample}
+#lappend dbs {jdbc/testdb}
+
+set apps [list]
+lappend apps {/session}
+#lappend apps {/manager}
+
+#########################################
+
+  #puts "max active idle largest activesession largestsession"
+foreach {host} $hosts {
+  set parts [split $host "@"]
+
+  set servers [lindex $parts 1]
+  set users [lindex $parts 0]
+
+  set server [split $servers ":"]
+  set user [split $users ":"]
+
+  set hostname [lindex $server 0]
+  set port [lindex $server 1]
+
+  set username [lindex $user 0]
+  set password [lindex $user 1]
+
+  puts -nonewline "hostname>>$hostname\:$port|"
+  puts -nonewline "time>>$date $time|"
+
+  # for each host...
+
+  # Connect to it.
+  jmx_connect -h $hostname -p $port -U $username -P $password
+
+  # set threads Param
+  set thmax "[jmx_get -m Catalina:type=Executor,name=tomcatThreadPool maxThreads]"
+  set thactive "[jmx_get -m Catalina:type=Executor,name=tomcatThreadPool activeCount]"
+  set thidle "[jmx_get -m Catalina:type=Executor,name=tomcatThreadPool poolSize]"
+  set thlarge "[jmx_get -m Catalina:type=Executor,name=tomcatThreadPool largestPoolSize]"
+
+  puts -nonewline "thread>>$thmax,$thactive,$thidle,$thlarge|"
+
+  ### iterator app context array start
+  foreach {app} $apps {
+    # set session Param
+    set ssactive "[jmx_get -m Catalina:type=Manager,host=localhost,context=$app activeSessions]"
+    set sslarge "[jmx_get -m Catalina:type=Manager,host=localhost,context=$app maxActive]"
+
+    puts -nonewline "session>>$app,$ssactive,$sslarge|" 
+  }
+
+
+  # set datasource Param
+  #puts "dsname total active idle"
+  set dscount 0
+  foreach {db} $dbs {
+    incr dscount
+    #puts "$db connection pool "
+    set dbname "$db"
+    set dbmax "[jmx_get -m Catalina:name="$db",type=DataSource,class=javax.sql.DataSource maxTotal]"
+    set dbactive "[jmx_get -m Catalina:name="$db",type=DataSource,class=javax.sql.DataSource numActive]"
+    set dbidle "[jmx_get -m Catalina:name="$db",type=DataSource,class=javax.sql.DataSource numIdle]"
+    #puts "$dbname,$dbmax,$dbactive,$dbidle" 
+    puts -nonewline "db>>$dbname,$dbmax,$dbactive,$dbidle|" 
+  }
+
+  # Close this connection
+  jmx_close
+}
